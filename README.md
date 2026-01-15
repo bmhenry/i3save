@@ -1,5 +1,7 @@
 # i3save
 
+_Disclaimer: This repository is basically entirely AI generated_
+
 A command-line utility for i3 window manager users to save and restore workspace-to-monitor mappings.
 
 `i3save` solves the problem of workspaces not persisting their monitor locations when switching between monitor configurations (e.g., docking/undocking a laptop).
