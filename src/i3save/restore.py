@@ -151,7 +151,8 @@ def restore(filepath: str, quiet: bool = False, verbose: bool = False) -> int:
     """Restore workspace layout from a file.
 
     Main entry point for the restore command. Loads saved workspace positions
-    and restores them, then refocuses the previously focused workspace.
+    and restores them, then restores visible workspaces on each output, and
+    finally refocuses the previously focused workspace.
 
     Args:
         filepath: Path to the saved workspace mapping file
@@ -174,7 +175,21 @@ def restore(filepath: str, quiet: bool = False, verbose: bool = False) -> int:
 
     successful, skipped = restore_workspaces(mapping, logger)
 
-    # Restore focus to the previously focused workspace
+    # Restore visible workspaces on each output
+    visible_workspaces = mapping.get("visible_workspaces", [])
+    if visible_workspaces:
+        current_workspaces = get_current_workspaces()
+        logger.debug(f"Restoring {len(visible_workspaces)} visible workspace(s)")
+
+        for ws in visible_workspaces:
+            ws_name = ws["name"]
+            if ws_name in current_workspaces:
+                i3.focus_workspace(ws_name)
+                logger.debug(f"  Made workspace '{ws_name}' visible on output '{ws['output']}'")
+            else:
+                logger.debug(f"  Workspace '{ws_name}' no longer exists, skipping visibility restore")
+
+    # Restore focus to the previously focused workspace (do this last to ensure correct focus)
     focused = mapping.get("focused")
     if focused:
         current_workspaces = get_current_workspaces()

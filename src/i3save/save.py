@@ -12,12 +12,17 @@ def build_workspace_mapping() -> dict:
     """Build a mapping of workspaces to their current outputs.
 
     Queries i3 for the current workspace state and builds a JSON-serializable
-    structure containing the focused workspace and all workspace-to-output mappings.
+    structure containing the focused workspace, visible workspaces per output,
+    and all workspace-to-output mappings.
 
     Returns:
         Dictionary with structure:
         {
             "focused": "<name of focused workspace>",
+            "visible_workspaces": [
+                {"name": "<workspace name>", "output": "<output name>"},
+                ...
+            ],
             "workspaces": [
                 {"name": "<workspace name>", "output": "<output name>"},
                 ...
@@ -28,6 +33,7 @@ def build_workspace_mapping() -> dict:
 
     focused_workspace = None
     workspace_list = []
+    visible_workspaces = []
 
     for ws in workspaces:
         workspace_list.append({
@@ -36,9 +42,15 @@ def build_workspace_mapping() -> dict:
         })
         if ws.get("focused", False):
             focused_workspace = ws["name"]
+        if ws.get("visible", False):
+            visible_workspaces.append({
+                "name": ws["name"],
+                "output": ws["output"]
+            })
 
     return {
         "focused": focused_workspace,
+        "visible_workspaces": visible_workspaces,
         "workspaces": workspace_list
     }
 
@@ -90,6 +102,10 @@ def save(filepath: str, quiet: bool = False, verbose: bool = False) -> int:
     logger.debug(f"Found {len(mapping['workspaces'])} workspace(s)")
     for ws in mapping["workspaces"]:
         logger.debug(f"  Workspace '{ws['name']}' on output '{ws['output']}'")
+    if mapping.get("visible_workspaces"):
+        logger.debug(f"Visible workspaces: {len(mapping['visible_workspaces'])}")
+        for ws in mapping["visible_workspaces"]:
+            logger.debug(f"  '{ws['name']}' visible on output '{ws['output']}'")
     if mapping["focused"]:
         logger.debug(f"Focused workspace: {mapping['focused']}")
 
